@@ -2,48 +2,12 @@
 
 <h3 id="-1">目录</h3>
 
-- [0.简介](#0)
-- [1.快速入门](#1)
-    - [1.1 准备工作](#1-1)
-    - [1.2 引入SpringSecurity](#1-2)
-- [2.认证](#2)
-    - [2.1 登录校验流程](#2-1)
-    - [2.2 原理初探](#2-2)
-        - [2.2.1 SpringSecurity完整流程](#2-2-1)
-        - [2.2.2 认证流程详解](#2-2-2)
-    - [2.3 解决问题](#2-3)
-        - [2.3.1 思路分析](#2-3-1)
-        - [2.3.2 准备工作](#2-3-2)
-        - [2.3.3 实现](#2-3-3)
-            - [2.3.3.1 数据库校验用户](#2-3-3-1)
-            - [2.3.3.2 密码加密存储](#2-3-3-2)
-            - [2.3.3.3 登录接口](#2-3-3-3)
-            - [2.3.3.4 认证过滤器](#2-3-3-4)
-            - [2.3.3.5 退出登录](#2-3-3-5)
-- [3.授权](#3)
-    - [3.1 授权系统的作用](#3-1)
-    - [3.2 授权基本流程](#3-2)
-    - [3.3 授权实现](#3-3)
-        - [3.3.1 限制访问资源所需权限](#3-3-1)
-        - [3.3.2 封装权限信息](#3-3-2)
-        - [3.3.3 从数据库查询权限信息](#3-3-3)
-            - [3.3.3.1 RBAC权限模型](#3-3-3-1)
-            - [3.3.3.2 准备工作](#3-3-3-2)
-            - [3.3.3.3 代码实现](#3-3-3-3)
-- [4.自定义失败处理](#4)
-- [5.跨域](#5)
-- [6.遗留小问题](#6)
-    - [6.1 其他权限校验注解方法](#6-1)
-    - [6.2 自定义权限校验注解方法](#6-2)
-    - [6.3 基于配置的权限控制](#6-3)
-    - [6.4 CSRF](#6-4)
-    - [6.5 认证成功处理器](#6-5)
-    - [6.6 认证失败处理器](#6-6)
-    - [6.7 登出成功处理器](#6-7)
-- [7.参考](#7)
+[TOC]
 
 
-<h2 id="0">[0.简介](#-1)</h2>
+
+## 0.简介
+
 **Spring Security** 是 Spring 家族中的一个安全管理框架。相比与另外一个安全框架**Shiro**，它提供了更丰富的功能，社区资源也比Shiro丰富。
 
 一般来说中大型的项目都是使用**SpringSecurity** 来做安全框架。小项目有Shiro的比较多，因为相比与SpringSecurity，Shiro的上手更加的简单。
@@ -56,8 +20,8 @@
 
 而认证和授权也是SpringSecurity作为安全框架的核心功能。
 
-<h2 id="1">[1.快速入门](#-1)</h2>
-<h3 id="1-1">[1.1 准备工作](#-1)</h3>
+## 1.快速入门
+### 1.1 准备工作
 
 我们先要搭建一个简单的SpringBoot工程
 
@@ -131,7 +95,7 @@ public class TestController {
 }
 ```
 
-<h3 id="1-2">[1.2 引入SpringSecurity](#-1)</h3>
+### 1.2 引入SpringSecurity
 在SpringBoot项目中使用SpringSecurity我们只需要引入依赖即可实现入门案例。
 
 ```xml
@@ -146,15 +110,15 @@ public class TestController {
 
 必须登陆之后才能对接口进行访问。
 
-<h2 id="2">[2.认证](#-1)</h2>
-<h3 id="2-1">[2.1 登录校验流程](#-1)</h3>
+## 2.认证
+### 2.1 登录校验流程
 
 ![登录校验流程图](./assets/登录校验流程图.png "登录校验流程图")
 
-<h3 id="2-2">[2.2 原理初探](#-1)</h3>
+### 2.2 原理初探
 想要知道如何实现自己的登陆流程就必须要先知道入门案例中SpringSecurity的流程。
 
-<h4 id="2-2-1">[2.2.1 SpringSecurity完整流程](#-1)</h4>
+#### 2.2.1 SpringSecurity完整流程
 SpringSecurity的原理其实就是一个过滤器链，内部包含了提供各种功能的过滤器。这里我们可以看看入门案例中的过滤器。
 ![SpringSecurity过滤器链](./assets/SpringSecurity过滤器链.png "SpringSecurity过滤器链")
 
@@ -193,7 +157,7 @@ public class SecuritySampleQuickStartApplication {
 
 ![默认的安全过滤器链](./assets/默认的安全过滤器链.png "默认的安全过滤器链")
 
-<h4 id="2-2-2">[2.2.2 认证流程详解](#-1)</h4>
+#### 2.2.2 认证流程详解
 
 ![认证流程详解](./assets/认证流程详解.png "认证流程详解")
 
@@ -207,8 +171,8 @@ public class SecuritySampleQuickStartApplication {
 
 **UserDetails接口**：提供核心用户信息。通过UserDetailsService根据用户名获取处理的用户信息要封装成UserDetails对象返回。然后将这些信息封装到Authentication对象中。
 
-<h3 id="2-3">[2.3 解决问题](#-1)</h3>
-<h4 id="2-3-1">[2.3.1 思路分析](#-1)</h4>
+### 2.3 解决问题
+#### 2.3.1 思路分析
 **登录**
 
 ①自定义登录接口
@@ -226,7 +190,7 @@ public class SecuritySampleQuickStartApplication {
 从redis中获取用户信息 <br/>
 存入SecurityContextHolder <br/>
 
-<h4 id="2-3-2">[2.3.2 准备工作](#-1)</h4>
+#### 2.3.2 准备工作
 ①添加依赖
 
 ```xml
@@ -1093,12 +1057,12 @@ public class SysUser implements Serializable {
 }
 ```
 
-<h4 id="2-3-3">[2.3.3 实现](#-1)</h4>
-<h5 id="2-3-3-1">[2.3.3.1 数据库校验用户](#-1)</h5>
+#### 2.3.3 实现
+##### 2.3.3.1 数据库校验用户
 从之前的分析我们可以知道，我们可以自定义一个```UserDetailsService```,让SpringSecurity使用我们的```UserDetailsService```
 实现类。我们自己的```UserDetailsService```实现类可以从数据库中查询用户名和密码。
 
-<h6>准备工作</h6>
+###### 准备工作
 我们先创建一个用户表， 建表语句如下：
 
 ```mysql
@@ -1307,7 +1271,7 @@ public class MybatisPlusTests {
 }
 ```
 
-<h6>核心代码实现</h6>
+###### 核心代码实现
 创建一个类实现UserDetailsService接口，重写其中的方法。更加用户名从数据库中查询用户信息。
 
 ```java
@@ -1473,7 +1437,7 @@ public class MybatisPlusTests {
 }
 ```
 
-<h5 id="2-3-3-2">[2.3.3.2 密码加密存储](#-1)</h5>
+##### 2.3.3.2 密码加密存储
 实际项目中我们不会把密码明文存储在数据库中。
 
 默认使用的`PasswordEncoder`要求数据库中的密码格式为：`{id}password` ，比如`{noop}1234`这种方式，直接输入`1234`
@@ -1557,7 +1521,7 @@ public class MybatisPlusTests {
 }
 ```
 
-<h5 id="2-3-3-3">[2.3.3.3 登录接口](#-1)</h5>
+##### 2.3.3.3 登录接口
 接下我们需要自定义登陆接口，然后让SpringSecurity对这个接口放行，让用户访问这个接口的时候不用登录也能访问。
 
 在接口中我们通过`AuthenticationManager`的`authenticate`方法来进行用户认证，所以需要在`SecurityConfig`中配置把`AuthenticationManager`注入容器。
@@ -1766,7 +1730,7 @@ public class LoginServiceImpl implements ILoginService {
 
 ![用户登录接口测试案例（失败）](./assets/用户登录接口测试案例（失败）.png "用户登录接口测试案例（失败）")
 
-<h5 id="2-3-3-4">[2.3.3.4 认证过滤器](#-1)</h5>
+##### 2.3.3.4 认证过滤器
 我们需要自定义一个过滤器，这个过滤器会去获取请求头中的token，对token进行解析取出其中的userid。
 
 使用userid去redis中获取对应的`LoginUser`对象。
@@ -1928,7 +1892,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 ![测试接口案例-携带token请求头（正常）](./assets/测试接口案例-携带token请求头（正常）.png "测试接口案例-携带token请求头（正常）")
 
-<h5 id="2-3-3-5">[2.3.3.5 退出登录](#-1)</h5>
+##### 2.3.3.5 退出登录
 我们只需要定义一个登陆接口，然后获取SecurityContextHolder中的认证信息，删除redis中对应的数据即可。
 
 登录服务接口
@@ -2105,8 +2069,8 @@ public class LoginController {
 使用相同的token重新进行接口测试效果
 ![测试接口案例-携带token请求头失效（失败）](./assets/测试接口案例-携带token请求头失效（失败）.png "测试接口案例-携带token请求头失效（失败）")
 
-<h2 id="3">[3.授权](#-1)</h2>
-<h3 id="3-1">[3.1 授权系统的作用](#-1)</h3>
+## 3.授权
+### 3.1 授权系统的作用
 例如一个学校图书馆的管理系统，如果是普通学生登录就能看到借书还书相关的功能，不可能让他看到并且去使用添加书籍信息，删除书籍信息等功能。但是如果是一个图书馆管理员的账号登录了，应该就能看到并使用添加书籍信息，删除书籍信息等功能。
 
 总结起来就是**不同的用户可以使用不同的功能**。这就是权限系统要去实现的效果。
@@ -2115,7 +2079,7 @@ public class LoginController {
 
 所以我们还需要在后台进行用户权限的判断，判断当前用户是否有相应的权限，必须具有所需权限才能进行相应的操作。
 
-<h3 id="3-2">[3.2 授权基本流程](#-1)</h3>
+### 3.2 授权基本流程
 在SpringSecurity中，会使用默认的`FilterSecurityInterceptor`来进行权限校验。在`FilterSecurityInterceptor`中会从`SecurityContextHolder`
 获取其中的`Authentication`，然后获取其中的权限信息。当前用户是否拥有访问当前资源所需的权限。
 
@@ -2123,9 +2087,9 @@ public class LoginController {
 
 最后设置我们的资源所需要的权限即可。
 
-<h3 id="3-3">[3.3 授权实现](#-1)</h3>
+### 3.3 授权实现
 
-<h4 id="3-3-1">[3.3.1 限制访问资源所需权限](#-1)</h4>
+#### 3.3.1 限制访问资源所需权限
 SpringSecurity为我们提供了基于注解的权限控制方案，这也是我们项目中主要采用的方式。我们可以使用注解去指定访问对应的资源所需的权限。
 
 但是要使用它我们需要先开启相关配置。
@@ -2181,7 +2145,7 @@ public class TestController {
 }
 ```
 
-<h4 id="3-3-2">[3.3.2 封装权限信息](#-1)</h4>
+#### 3.3.2 封装权限信息
 我们前面在写`UserDetailsServiceImpl`的时候说过，在查询出用户后还要获取对应的权限信息，封装到`UserDetails`中返回。
 
 我们先直接把权限信息写死封装到`UserDetails`中进行测试。
@@ -2399,14 +2363,14 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
 }
 ```
 
-<h4 id="3-3-3">[3.3.3 从数据库查询权限信息](#-1)</h4>
+#### 3.3.3 从数据库查询权限信息
 
-<h5 id="3-3-3-1">[3.3.3.1 RBAC权限模型](#-1)</h4>
+##### 3.3.3.1 RBAC权限模型
 **RBAC**权限模型（**Role-Based Access Control**）即：基于角色的权限控制。这是目前最常被开发者使用也是相对易用、通用权限模型。
 
 ![RBAC权限模型](./assets/RBAC权限模型.png "RBAC权限模型")
 
-<h5 id="3-3-3-2">[3.3.3.2 准备工作](#-1)</h4>
+##### 3.3.3.2 准备工作
 
 ```mysql
 /*Table structure for table `sys_menu` */
@@ -2516,7 +2480,7 @@ INSERT INTO `spring_security_sample`.`sys_user_role`(`user_id`, `role_id`)
 VALUES (1522098415289204737, 1522096801455202305);
 ```
 
-<h5 id="3-3-3-3">[3.3.3.3 代码实现](#-1)</h4>
+##### 3.3.3.3 代码实现
 新建实体类
 
 `Menu.java`
@@ -2746,7 +2710,7 @@ public class TestController {
 }
 ```
 
-<h2 id="4">[4.自定义失败处理](#-1)</h2>
+## 4.自定义失败处理
 我们还希望在认证失败或者是授权失败的情况下也能和我们的接口一样返回相同结构的json，这样可以让前端能对响应进行统一的处理。要实现这个功能我们需要知道SpringSecurity的异常处理机制。
 
 在SpringSecurity中，如果我们在认证或者授权的过程中出现了异常会被`ExceptionTranslationFilter`捕获到。在`ExceptionTranslationFilter`
@@ -2948,7 +2912,7 @@ token过期之后，重新调用接口的效果（认证异常拦截）
 
 ![授权失败的响应体](./assets/授权失败的响应体.png "授权失败的响应体")
 
-<h2 id="5">[5.跨域](#-1)</h2>
+## 5.跨域
 浏览器出于安全的考虑，使用`XMLHttpRequest`对象发起 HTTP请求时必须遵守同源策略，否则就是跨域的HTTP请求，默认情况下是被禁止的。 同源策略要求源相同才能正常进行通信，即**协议、域名、端口号都完全一致**。
 
 前后端分离项目，前端项目和后端项目一般都不是同源的，所以肯定会存在跨域请求的问题。
@@ -3090,9 +3054,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 ![web-ui启动成功案例](./assets/web-ui启动成功案例.png "web-ui启动成功案例")
 
-<h2 id="6">[6.遗留小问题](#-1)</h2>
+## 6.遗留小问题
 
-<h3 id="6-1">[6.1 其他权限校验注解方法](#-1)</h3>
+### 6.1 其他权限校验注解方法
 我们前面都是使用`@PreAuthorize`注解，然后在在其中使用的是`hasAuthority`方法进行校验。SpringSecurity还为我们提供了其它方法例如：`hasAnyAuthority`，`hasRole`
 ，`hasAnyRole`等。
 
@@ -3105,6 +3069,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 `hasAnyAuthority`方法可以传入多个权限，只有用户有其中任意一个权限都可以访问对应资源。
 
 ```java
+
 @RestController
 @RequestMapping("/test")
 public class TestController {
@@ -3118,7 +3083,9 @@ public class TestController {
 ```
 
 `hasRole`要求有对应的角色才可以访问，但是它内部会把我们传入的参数拼接上 **ROLE_** 后再去比较。所以这种情况下要用用户对应的权限也要有 **ROLE_** 这个前缀才可以。
+
 ```java
+
 @RestController
 @RequestMapping("/test")
 public class TestController {
@@ -3132,7 +3099,9 @@ public class TestController {
 ```
 
 `hasAnyRole`有任意的角色就可以访问。它内部也会把我们传入的参数拼接上 **ROLE_** 后再去比较。所以这种情况下要用用户对应的权限也要有 **ROLE_** 这个前缀才可以。
+
 ```java
+
 @RestController
 @RequestMapping("/test")
 public class TestController {
@@ -3145,7 +3114,7 @@ public class TestController {
 }
 ```
 
-<h3 id="6-2">[6.2 自定义权限校验注解方法](#-1)</h3>
+### 6.2 自定义权限校验注解方法
 我们也可以定义自己的权限校验方法，在`@PreAuthorize`注解中使用我们的方法。
 
 ```java
@@ -3168,7 +3137,7 @@ import java.util.List;
 @Component(value = "ca")
 public class CustomizeAuthorize {
 
-    public boolean hasAuthority(String authority){
+    public boolean hasAuthority(String authority) {
         // 获取当前用户的权限
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         LoginUser loginUser = (LoginUser) authentication.getPrincipal();
@@ -3180,6 +3149,7 @@ public class CustomizeAuthorize {
 ```
 
 在`SPEL`表达式中使用 `@ca`相当于获取容器中bean的名字为ca的对象。然后再调用这个对象的`hasAuthority`方法
+
 ```java
 /**
  * SpringSecurity测试接口
@@ -3191,7 +3161,7 @@ public class CustomizeAuthorize {
 @RestController
 @RequestMapping("/test")
 public class TestController {
-    
+
     @RequestMapping("/testCustomizeAuthorize")
     @PreAuthorize("@ca.hasAuthority('system:test:list')")
     public ResponseResult<String> testCustomizeAuthorize() {
@@ -3199,12 +3169,12 @@ public class TestController {
     }
 }
 ```
+
 使用自定义权限校验方法测试接口效果
 
 ![自定义权限校验方法接口测试案例](./assets/自定义权限校验方法接口测试案例.png "自定义权限校验方法接口测试案例")
 
-
-<h3 id="6-3">[6.3 基于配置的权限控制](#-1)</h3>
+### 6.3 基于配置的权限控制
 我们也可以在配置类中使用使用配置的方式对资源进行权限控制。
 
 ```java
@@ -3236,31 +3206,35 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/test/testCors").hasAuthority("system:test:list")
                 // 除上面外的所有请求全部需要鉴权认证
                 .anyRequest().authenticated();
-        
+
         // ...省略其他http方法
     }
 }
 ```
 
-<h3 id="6-4">[6.4 CSRF](#-1)</h3>
+### 6.4 CSRF
 CSRF是指跨站请求伪造（Cross-site request forgery），是web常见的攻击之一。
 
 ![CSRF漏洞原理](./assets/CSRF漏洞原理.jpg "CSRF漏洞原理")
 
 参考地址：[https://blog.csdn.net/freeking101/article/details/86537087](https://blog.csdn.net/freeking101/article/details/86537087)
 
-SpringSecurity去防止CSRF攻击的方式就是通过**csrf_token**。后端会生成一个**csrf_token**，前端发起请求的时候需要携带这个**csrf_token**,后端会有过滤器进行校验，如果没有携带或者是伪造的就不允许访问。
+SpringSecurity去防止CSRF攻击的方式就是通过**csrf_token**。后端会生成一个**csrf_token**，前端发起请求的时候需要携带这个**csrf_token**
+,后端会有过滤器进行校验，如果没有携带或者是伪造的就不允许访问。
 
-我们可以发现CSRF攻击依靠的是cookie中所携带的认证信息。但是在前后端分离的项目中我们的认证信息其实是**token**，而**token**并不是存储中cookie中，并且需要前端代码去把**token**设置到请求头中才可以，所以CSRF攻击也就不用担心了。
+我们可以发现CSRF攻击依靠的是cookie中所携带的认证信息。但是在前后端分离的项目中我们的认证信息其实是**token**，而**token**并不是存储中cookie中，并且需要前端代码去把**token**
+设置到请求头中才可以，所以CSRF攻击也就不用担心了。
 
-<h3 id="6-5">[6.5 认证成功处理器](#-1)</h3>
-实际上在`UsernamePasswordAuthenticationFilter`进行登录认证的时候，如果登录成功了是会调用`AuthenticationSuccessHandler`的方法进行认证成功后的处理的。`AuthenticationSuccessHandler`就是登录成功处理器。
+### 6.5 认证成功处理器
+实际上在`UsernamePasswordAuthenticationFilter`进行登录认证的时候，如果登录成功了是会调用`AuthenticationSuccessHandler`
+的方法进行认证成功后的处理的。`AuthenticationSuccessHandler`就是登录成功处理器。
 
 我们也可以自己去自定义成功处理器进行成功后的相应处理。
 
 【**注意**】_认证成功处理器适用于自定义表单登录时才有效_，也就是在security-sample-quickstart项目中进行测试有效，在security-sample-web项目中是无效的。
 
 认证成功处理器
+
 ```java
 package com.gitee.olinonee.boot.filter;
 
@@ -3296,7 +3270,9 @@ public class AuthSuccessHandler implements AuthenticationSuccessHandler {
     }
 }
 ```
+
 SpringSecurity配置类
+
 ```java
 package com.gitee.olinonee.boot.config;
 
@@ -3338,14 +3314,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 }
 ```
 
-<h3 id="6-6">[6.6 认证失败处理器](#-1)</h3>
-实际上在`UsernamePasswordAuthenticationFilter`进行登录认证的时候，如果认证失败了是会调用`AuthenticationFailureHandler`的方法进行认证失败后的处理的。`AuthenticationFailureHandler`就是登录失败处理器。
+### 6.6 认证失败处理器
+实际上在`UsernamePasswordAuthenticationFilter`进行登录认证的时候，如果认证失败了是会调用`AuthenticationFailureHandler`
+的方法进行认证失败后的处理的。`AuthenticationFailureHandler`就是登录失败处理器。
 
 我们也可以自己去自定义失败处理器进行失败后的相应处理。
 
 【**注意**】_认证失败处理器也适用于自定义表单登录时才有效_，与认证成功处理器同理。
 
 认证失败处理
+
 ```java
 package com.gitee.olinonee.boot.filter;
 
@@ -3382,7 +3360,9 @@ public class AuthFailureHandler implements AuthenticationFailureHandler {
     }
 }
 ```
+
 SpringSecurity配置类
+
 ```java
 package com.gitee.olinonee.boot.config;
 
@@ -3430,10 +3410,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 }
 ```
 
-<h3 id="6-7">[6.7 登出成功处理器](#-1)</h3>
+### 6.7 登出成功处理器
 我们也可以自己去自定义登出成功处理器进行登出的相应处理。
 
 自定义退出成功的处理器
+
 ```java
 package com.gitee.olinonee.boot.filter;
 
@@ -3464,7 +3445,9 @@ public class CustomizeLogoutSuccessHandler implements LogoutSuccessHandler {
     }
 }
 ```
+
 SpringSecurity配置类
+
 ```java
 package com.gitee.olinonee.boot.config;
 
@@ -3519,5 +3502,5 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 }
 ```
 
-<h2 id="7">[7.参考](#-1)</h2>
+## 7.参考
 参考地址：[https://www.bilibili.com/video/BV1mm4y1X7Hc](https://www.bilibili.com/video/BV1mm4y1X7Hc)
