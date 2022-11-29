@@ -30,6 +30,7 @@ import java.util.Collections;
  * @since 2022-04-24
  */
 @Configuration
+// 开启注解授权功能
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 

@@ -1447,7 +1447,11 @@ public class MybatisPlusTests {
 
 我们只需要使用把`BCryptPasswordEncoder`对象注入Spring容器中，SpringSecurity就会使用该`PasswordEncoder`来进行密码校验。
 
-我们可以定义一个SpringSecurity的配置类，SpringSecurity要求这个配置类要继承`WebSecurityConfigurerAdapter`。
+我们可以定义一个SpringSecurity的配置类，在 **spring-security-config 5.7.0 版本前** SpringSecurity要求这个配置类要继承`WebSecurityConfigurerAdapter`，5.7.0 版本开始不使用继承 `WebSecurityConfigurerAdapter` 方式。
+
+使用详情参考文档[WebSecurityConfigurerAdapter被遗弃文档说明](./WebSecurityConfigurerAdapter被遗弃文档说明.md) 或者参考官方说明：[https://spring.io/blog/2022/02/21/spring-security-without-the-websecurityconfigureradapter](https://spring.io/blog/2022/02/21/spring-security-without-the-websecurityconfigureradapter)
+
+
 
 ```java
 package com.gitee.olinonee.web.config;
